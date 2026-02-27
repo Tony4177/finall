@@ -11,8 +11,8 @@ if not api_key:
 else:
     # Explicitly pass the key into the configuration
     genai.configure(api_key=api_key)
-
-model = genai.GenerativeModel('gemini-2.0-flash')
+# Change 'gemini-2.0-flash' to 'gemini-1.5-flash'
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 def extract_meds_from_image(uploaded_file):
     if not api_key:
