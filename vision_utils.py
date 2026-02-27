@@ -1,25 +1,25 @@
 import google.generativeai as genai
 import os
 from PIL import Image
+from dotenv import load_dotenv
 
-# DIRECT RETRIEVAL: We check for both common names
-api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+load_dotenv()
 
-if not api_key:
-    # This will print in your Render 'Logs' tab
-    print("❌ ERROR: No API Key found in Render Environment Variables!")
-else:
-    # Explicitly pass the key into the configuration
+# Ensure we get the key from Render environment
+api_key = os.getenv("GEMINI_API_KEY")
+
+if api_key:
     genai.configure(api_key=api_key)
-# Change 'gemini-2.0-flash' to 'gemini-1.5-flash'
-model = genai.GenerativeModel('gemini-1.5-flash')
+else:
+    print("❌ Error: GEMINI_API_KEY not found")
+
+# UPDATED: Adding 'models/' prefix often resolves 404 errors in v1beta
+model = genai.GenerativeModel('models/gemini-1.5-flash')
 
 def extract_meds_from_image(uploaded_file):
-    if not api_key:
-        return "System Error: Gemini API Key is missing in Render settings."
-        
     try:
         image = Image.open(uploaded_file)
+        
         prompt = """
         Analyze this prescription image. Extract:
         1. Medicine Name
@@ -27,7 +27,10 @@ def extract_meds_from_image(uploaded_file):
         3. Frequency/Time
         Format as a clean list.
         """
+        
+        # 
         response = model.generate_content([prompt, image])
         return response.text
     except Exception as e:
+        # This will catch if the model name is still causing issues
         return f"Error processing image: {str(e)}"
