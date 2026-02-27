@@ -1,4 +1,6 @@
 streamlit
 supabase
-openai>=1.0.0
+openai
 python-dotenv
+google-generativeai
+Pillow
