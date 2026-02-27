@@ -5,8 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Get your key from https://console.groq.com/keys
-# In Render, add this to your Environment Variables
+# Get your key from your Render Environment Variables
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 # Groq provides an OpenAI-compatible API
@@ -16,7 +15,7 @@ client = openai.OpenAI(
 )
 
 def ask_ai_assistant(user_query, med_history):
-    # Convert medication data into a readable string for the AI
+    # Convert medication data into a readable string for context
     meds_context = ""
     if med_history:
         meds_context = ", ".join([f"{m['med_name']} ({m['dosage']}) at {m['reminder_time']}" for m in med_history])
@@ -30,18 +29,19 @@ def ask_ai_assistant(user_query, med_history):
     Rules:
     1. Help the user understand how to take their meds correctly.
     2. Give general health advice based on their specific meds.
-    3. IMPORTANT: Always include a disclaimer that you are an AI and they should consult a doctor for medical decisions.
+    3. IMPORTANT: Always include a disclaimer that you are an AI and they should consult a doctor.
     4. Keep answers short and easy to read.
     """
     
     try:
+        # UPDATED: Using llama-3.1-8b-instant for speed and reliability
         response = client.chat.completions.create(
-            model="llama3-8b-8192", # This is the best free model on Groq
+            model="llama-3.1-8b-instant", 
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_query}
             ],
-            temperature=0.5 # Keeps the AI focused and accurate
+            temperature=0.5 
         )
         return response.choices[0].message.content
     except Exception as e:
