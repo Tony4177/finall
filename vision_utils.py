@@ -1,38 +1,40 @@
-import google.generativeai as genai
+from google import genai
 import os
 from PIL import Image
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# Get the key from Render environment
-api_key = os.getenv("GEMINI_API_KEY")
-if api_key:
-    genai.configure(api_key=api_key)
+# Initialize the new Google GenAI Client
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 def extract_meds_from_image(uploaded_file):
     try:
         image = Image.open(uploaded_file)
-        
-        # We try the most stable naming convention first
-        model = genai.GenerativeModel('gemini-1.5-flash-latest')
         
         prompt = """
         Analyze this prescription image. Extract:
         1. Medicine Name
         2. Dosage
         3. Frequency/Time
-        Format as a clean list. If you cannot read it, say 'Manual check required'.
+        Format as a clean list.
         """
         
-        response = model.generate_content([prompt, image])
+        # Using Gemini 2.5 Flash, the current stable workhorse
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=[prompt, image]
+        )
+        
         return response.text
         
     except Exception as e:
-        # Fallback for 404 errors: Try the versioned name
+        # If 2.5 Flash fails, try a broader alias as a backup
         try:
-            model_fallback = genai.GenerativeModel('gemini-1.5-flash')
-            response = model_fallback.generate_content([prompt, image])
+            response = client.models.generate_content(
+                model='gemini-flash-latest',
+                contents=[prompt, image]
+            )
             return response.text
         except Exception as e2:
-            return f"AI Error: Please ensure your GEMINI_API_KEY is correct in Render. ({str(e2)})"
+            return f"System Error: {str(e2)}"
